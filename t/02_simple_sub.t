@@ -39,11 +39,11 @@ t::02_simple_sub.t - t::02_simple_sub.t
 
 =head1 REQUIRES
 
-L<Pod::Autopod> 
+L<lib> 
 
 L<Test> 
 
-L<lib> 
+L<Pod::Autopod> 
 
 
 =head1 METHODS

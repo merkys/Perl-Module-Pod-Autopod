@@ -33,11 +33,11 @@ MyNewPackage
 
 =head1 REQUIRES
 
-L<Pod::Autopod> 
+L<lib> 
 
 L<Test> 
 
-L<lib> 
+L<Pod::Autopod> 
 
 
 =head1 METHODS

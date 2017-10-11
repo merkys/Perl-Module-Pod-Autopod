@@ -591,6 +591,7 @@ my $file=shift;
     if ($file) {
         $self->{'tree'} = PPI::Document->new($file) if $file;
 
+        # Find the name and description of the package
         for my $i ( 0..$#{ $self->{'tree'}{'children'} } ) {
             my $child = $self->{'tree'}{'children'}[$i];
             next unless $child->isa('PPI::Statement::Package');
@@ -603,6 +604,22 @@ my $file=shift;
                 $self->{'PKGNAME_DESC'} = $self->{'tree'}{'children'}[$i+$offset]{'content'};
                 $self->{'PKGNAME_DESC'}=~ s/^\s*\#*//g;
             }
+        }
+
+        # Find all requires
+        for my $i ( 0..$#{ $self->{'tree'}{'children'} } ) {
+            my $child = $self->{'tree'}{'children'}[$i];
+            next unless $child->isa('PPI::Statement::Include');
+            my $name = $child->{'children'}[2]{'content'};
+            my $rem;
+            if( $self->{'tree'}{'children'}[$i+1]->isa('PPI::Token::Whitespace') &&
+                $self->{'tree'}{'children'}[$i+1]{'content'} !~ /\n/ &&
+                $self->{'tree'}{'children'}[$i+2]->isa('PPI::Token::Comment') ) {
+                $rem = $self->{'tree'}{'children'}[$i+2]{'content'};
+                $rem =~ s/^[^\#]*\#*//;
+            }
+            $self->{'REQUIRES'} = $self->{'REQUIRES'} || [];
+            push @{$self->{'REQUIRES'}},{'name'=>$name,'desc'=>$rem};
         }
     }
 	
@@ -703,14 +720,6 @@ my $file=shift;
 
 		}
 
-
-
-
-
-
-
-
-
 		if ($line=~ m/^\s*sub [^ ]+/){ ## head line
 			$self->_clearHeadBuffer();
 			$self->_setMethodLine($line);
@@ -720,24 +729,12 @@ my $file=shift;
 			$self->_setMethodReturn(undef);	
 		}
 
-
-                
-                
-		
 		if ($writeOut){
 			if ($self->{'STATE'} eq 'head'){
 				$self->_addLineToHeadBuffer($line);
 			}elsif($self->{'STATE'} eq 'body'){
 				$self->_addLineToBodyBuffer($line);	
 			}
-		}
-
-		if ($line=~ m/^\s*use +([^\; ]+)[\; ](.*)/){
-			$self->{'REQUIRES'} = $self->{'REQUIRES'} || [];
-			my $name=$1;
-			my $rem=$2;
-			$rem=~ s/^[^\#]*\#*//;
-			push @{$self->{'REQUIRES'}},{'name'=>$name,'desc'=>$rem};
 		}
 
 
