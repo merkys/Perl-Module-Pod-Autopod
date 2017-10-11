@@ -588,7 +588,23 @@ my $arr=shift or die "Arrayref expected";
 my $file=shift;	
 	$self->{'STATE'} = 'head';
 	
-    $self->{'tree'} = PPI::Document->new($file) if $file;
+    if ($file) {
+        $self->{'tree'} = PPI::Document->new($file) if $file;
+
+        for my $i ( 0..$#{ $self->{'tree'}{'children'} } ) {
+            my $child = $self->{'tree'}{'children'}[$i];
+            next unless $child->isa('PPI::Statement::Package');
+            $self->{'PKGNAME'} = $child->{'children'}[2]{'content'};
+            my $offset = 1;
+            while( $self->{'tree'}{'children'}[$i+$offset]->isa('PPI::Token::Whitespace') ) {
+                $offset++;
+            }
+            if( $self->{'tree'}{'children'}[$i+$offset]->isa('PPI::Token::Comment') ) {
+                $self->{'PKGNAME_DESC'} = $self->{'tree'}{'children'}[$i+$offset]{'content'};
+                $self->{'PKGNAME_DESC'}=~ s/^\s*\#*//g;
+            }
+        }
+    }
 	
 	## reverse read
 	for (my $i=0;$i < scalar(@$arr); $i++){
@@ -714,12 +730,6 @@ my $file=shift;
 			}elsif($self->{'STATE'} eq 'body'){
 				$self->_addLineToBodyBuffer($line);	
 			}
-		}
-		
-		if ($line=~ m/^\s*package ([^\;]+)\;(.*)/){
-			$self->{'PKGNAME'}=$1;
-			$self->{'PKGNAME_DESC'}=$2;
-			$self->{'PKGNAME_DESC'}=~ s/^\s*\#*//g;
 		}
 
 		if ($line=~ m/^\s*use +([^\; ]+)[\; ](.*)/){
