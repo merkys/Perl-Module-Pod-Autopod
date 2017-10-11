@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 package MyNewPackage;
-# description of this package is on the next line, therefore, not seen
+# description of this package is on the next line, however, it's seen
 
 use lib 'lib','../lib';
 
@@ -24,7 +24,7 @@ $ap->readFile(__FILE__);
 ok($ap->getPod(), <<'ORIG');
 =head1 NAME
 
-MyNewPackage
+MyNewPackage - description of this package is on the next line, however, it's seen
 
 
 =head1 DESCRIPTION
