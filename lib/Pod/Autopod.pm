@@ -5,6 +5,7 @@ use FileHandle;
 use strict;
 use Pod::Abstract;
 use Pod::Abstract::BuildNode qw(node nodes);
+use PPI;
 
 
 # This Module is designed to generate pod documentation of a perl class by analysing its code.
@@ -587,6 +588,7 @@ my $arr=shift or die "Arrayref expected";
 my $file=shift;	
 	$self->{'STATE'} = 'head';
 	
+    $self->{'tree'} = PPI::Document->new($file) if $file;
 	
 	## reverse read
 	for (my $i=0;$i < scalar(@$arr); $i++){
