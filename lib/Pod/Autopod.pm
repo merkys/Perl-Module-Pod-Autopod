@@ -6,6 +6,7 @@ use strict;
 use Pod::Abstract;
 use Pod::Abstract::BuildNode qw(node nodes);
 use PPI;
+use Scalar::Util qw(refaddr);
 
 
 # This Module is designed to generate pod documentation of a perl class by analysing its code.
@@ -587,21 +588,22 @@ my $self=shift;
 my $arr=shift or die "Arrayref expected";	
 my $file=shift;	
 	$self->{'STATE'} = 'head';
-	
+
     if ($file) {
         $self->{'tree'} = PPI::Document->new($file) if $file;
+        $self->_buildLinks();
 
         # Find the name and description of the package
-        for my $i ( 0..$#{ $self->{'tree'}{'children'} } ) {
-            my $child = $self->{'tree'}{'children'}[$i];
-            next unless $child->isa('PPI::Statement::Package');
-            $self->{'PKGNAME'} = $child->{'children'}[2]{'content'};
-            my $offset = 1;
-            while( $self->{'tree'}{'children'}[$i+$offset]->isa('PPI::Token::Whitespace') ) {
-                $offset++;
+        my $packages = $self->{'tree'}->find( 'PPI::Statement::Package' );
+        $packages = [] unless ref $packages;
+        for my $package (@$packages) {
+            $self->{'PKGNAME'} = $package->{'children'}[2]{'content'};
+            my $next = $self->{'next'}{refaddr $package};
+            while( $next->isa('PPI::Token::Whitespace') ) {
+                $next = $self->{'next'}{refaddr $next};
             }
-            if( $self->{'tree'}{'children'}[$i+$offset]->isa('PPI::Token::Comment') ) {
-                $self->{'PKGNAME_DESC'} = $self->{'tree'}{'children'}[$i+$offset]{'content'};
+            if( $next->isa('PPI::Token::Comment') ) {
+                $self->{'PKGNAME_DESC'} = $next->{'content'};
                 $self->{'PKGNAME_DESC'}=~ s/^\s*\#*//g;
             }
         }
@@ -1671,6 +1673,33 @@ my $p=shift;
   }
 
 return $p;
+}
+
+
+
+
+
+sub _buildLinks{
+my $p=shift;
+my $node=shift;
+
+    $node = $p->{'tree'} if !$node;
+    $p->{'prev'} = {} unless exists $p->{'prev'};
+    $p->{'next'} = {} unless exists $p->{'next'};
+
+    return if !exists $node->{'children'};
+
+    for my $i (0..$#{ $node->{'children'} }) {
+        if( $i > 0 ) {
+            $p->{'prev'}{refaddr $node->{'children'}[$i]} =
+                $node->{'children'}[$i-1];
+        }
+        if( $i < $#{ $node->{'children'} } ) {
+            $p->{'next'}{refaddr $node->{'children'}[$i]} =
+                $node->{'children'}[$i+1];
+        }
+        $p->_buildLinks($node->{'children'}[$i]);
+    }
 }
 
 
