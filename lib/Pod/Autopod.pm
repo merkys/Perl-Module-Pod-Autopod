@@ -624,6 +624,7 @@ my $file=shift;
                 $rem =~ s/^[^\#]*\#*//;
             }
             if( $name eq 'base' ) {
+                # 'use base' statement
                 $self->{'INHERITS_FROM'} = $self->{'INHERITS_FROM'} || [];
                 my $package = join '', @{ $include->{'children'}[4..-1] };
                 $package =~ s/qw\(//g;
