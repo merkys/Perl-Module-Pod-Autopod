@@ -609,15 +609,18 @@ my $file=shift;
         }
 
         # Find all requires
-        for my $i ( 0..$#{ $self->{'tree'}{'children'} } ) {
-            my $child = $self->{'tree'}{'children'}[$i];
-            next unless $child->isa('PPI::Statement::Include');
-            my $name = $child->{'children'}[2]{'content'};
+        my $includes = $self->{'tree'}->find( 'PPI::Statement::Include' );
+        $includes = [] unless ref $includes;
+        for my $include (@$includes) {
+            my $name = $include->{'children'}[2]{'content'};
             my $rem;
-            if( $self->{'tree'}{'children'}[$i+1]->isa('PPI::Token::Whitespace') &&
-                $self->{'tree'}{'children'}[$i+1]{'content'} !~ /\n/ &&
-                $self->{'tree'}{'children'}[$i+2]->isa('PPI::Token::Comment') ) {
-                $rem = $self->{'tree'}{'children'}[$i+2]{'content'};
+            my $next = $self->{'next'}{refaddr $include};
+            while( $next->isa('PPI::Token::Whitespace') &&
+                   $next->{'content'} !~ /\n/ ) {
+                $next = $self->{'next'}{refaddr $next};
+            }
+            if( $next->isa('PPI::Token::Comment') ) {
+                $rem = $next->{'content'};
                 $rem =~ s/^[^\#]*\#*//;
             }
             $self->{'REQUIRES'} = $self->{'REQUIRES'} || [];
