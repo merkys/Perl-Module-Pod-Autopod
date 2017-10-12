@@ -604,7 +604,7 @@ my $file=shift;
             }
             if( $next->isa('PPI::Token::Comment') ) {
                 $self->{'PKGNAME_DESC'} = $next->{'content'};
-                $self->{'PKGNAME_DESC'}=~ s/^\s*\#*//g;
+                $self->{'PKGNAME_DESC'} =~ s/^\s*\#*//g;
             }
         }
 
@@ -623,8 +623,20 @@ my $file=shift;
                 $rem = $next->{'content'};
                 $rem =~ s/^[^\#]*\#*//;
             }
-            $self->{'REQUIRES'} = $self->{'REQUIRES'} || [];
-            push @{$self->{'REQUIRES'}},{'name'=>$name,'desc'=>$rem};
+            if( $name eq 'base' ) {
+                $self->{'INHERITS_FROM'} = $self->{'INHERITS_FROM'} || [];
+                my $package = join '', @{ $include->{'children'}[4..-1] };
+                $package =~ s/qw\(//g;
+                $package =~ s/[\)\']//g;
+                my @n = split( / +/, $package );
+                foreach my $n (@n){
+                    push @{$self->{'INHERITS_FROM'}},{'name'=>$n} if $n;
+                }
+            } else {
+                # Simple 'use ...' statement
+                $self->{'REQUIRES'} = $self->{'REQUIRES'} || [];
+                push @{$self->{'REQUIRES'}},{'name'=>$name,'desc'=>$rem};
+            }
         }
     }
 	
@@ -743,8 +755,7 @@ my $file=shift;
 		}
 
 
-		if (($line=~ m/^\s*use base +([^\; ]+)[\;](.*)/) ||
-			($line=~ m/^\s*our +\@ISA +([^\; ]+)[\;](.*)/)){
+		if ($line=~ m/^\s*our +\@ISA +([^\; ]+)[\;](.*)/){
 			$self->{'INHERITS_FROM'} = $self->{'INHERITS_FROM'} || [];
 			my $name=$1;
 			my $rem=$2;
