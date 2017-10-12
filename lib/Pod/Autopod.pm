@@ -599,7 +599,8 @@ my $file=shift;
         for my $package (@$packages) {
             $self->{'PKGNAME'} = $package->{'children'}[2]{'content'};
             my $next = $self->{'next'}{refaddr $package};
-            while( $next->isa('PPI::Token::Whitespace') ) {
+            while( $next->isa('PPI::Token::Whitespace') &&
+                   $next->{'content'} !~ /\n/ ) {
                 $next = $self->{'next'}{refaddr $next};
             }
             if( $next->isa('PPI::Token::Comment') ) {
