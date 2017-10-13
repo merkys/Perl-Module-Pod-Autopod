@@ -640,6 +640,24 @@ my $file=shift;
                 push @{$self->{'REQUIRES'}},{'name'=>$name,'desc'=>$rem};
             }
         }
+
+        # Find all subroutines
+        my $subs = $self->{'tree'}->find( 'PPI::Statement::Sub' );
+        $subs = [] unless ref $subs;
+        for my $sub (@$subs) {
+            my $name = $sub->{'children'}[2]{'content'};
+            my $prev = $self->{'prev'}{refaddr $sub};
+
+            # Collect and process head comments
+            while( $prev->isa('PPI::Token::Whitespace') ||
+                   $prev->isa('PPI::Token::Comment') ) {
+                if( $prev->isa('PPI::Token::Comment') ) {
+                    # process the content of a comment line
+                }
+                $prev = $self->{'prev'}{refaddr $prev};
+            }
+        }
+
     }
 	
 	## reverse read
