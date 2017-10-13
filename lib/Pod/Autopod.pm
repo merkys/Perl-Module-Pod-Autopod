@@ -644,18 +644,21 @@ my $file=shift;
 	
 	## reverse read
 	for (my $i=0;$i < scalar(@$arr); $i++){
+        # $p is the number of the current line (0 based, of course)
 		my $p=scalar(@$arr)-1-$i;
 
 		my $writeOut = 1;
 		
 		
 		
-		
+		# $line is currently analysed line.
 		my $line = $arr->[$p];
 
 		if ((($line=~ m/^\s*\#/) || ($p == 0)) && ($self->{'STATE'} eq 'headwait')){ ## last line of body
+            # head comments are detected
 			$self->{'STATE'} = 'head';
 		}elsif((($line=~ m/^\s*$/) || ($p == 0)) && ($self->{'STATE'} eq 'head')){ ## last line of body
+            # head is over, therefore, it is processed; parser waits for another body
 			$self->{'STATE'} = 'bodywait';
 
 			## collected doxy params? then rewrite methodline
@@ -683,12 +686,13 @@ my $file=shift;
 		}
 		
 
-
+        # If state is 'headwait' and a line is not empty and not containing a comment,
+        # 'free' state is picked.
 		if (($self->{'STATE'} eq 'headwait') && ($line!~ m/^\s*$/) && ($line!~ m/^\s*\#/)){
 			$self->{'STATE'}='free';
 		}
 
-
+        # If it's either first or the last line of sub, 'body' state is assumed.
 		if ((($line=~ m/^\s*\}/) || ($p == 0) || ($line=~ m/^\s*sub [^ ]+/)) && ($self->{'STATE'}=~ m/^(head|headwait|bodywait|free)$/)){ ## last line of body
 			$self->_clearBodyBuffer();
 			$self->{'STATE'} = 'body';
@@ -697,6 +701,7 @@ my $file=shift;
 
 		# a hack for doxy gen, which rewrites the methodline
 		# doxy @return
+        # checking for '# @something' constructions in 'head' state
 		if ($self->{'STATE'} eq 'head'){
 			if ($line=~ m/^\s*#\s*\@return\s+(.*)/){
 				my $retline = $1; # also containts description, which is not used at the moment
@@ -739,6 +744,7 @@ my $file=shift;
 
 		}
 
+        # sub is detected, state turns to 'headwait' (regardless of previous state).
 		if ($line=~ m/^\s*sub [^ ]+/){ ## head line
 			$self->_clearHeadBuffer();
 			$self->_setMethodLine($line);
@@ -748,6 +754,7 @@ my $file=shift;
 			$self->_setMethodReturn(undef);	
 		}
 
+        # If writeOut is requested, line is added to an appropriate buffer.
 		if ($writeOut){
 			if ($self->{'STATE'} eq 'head'){
 				$self->_addLineToHeadBuffer($line);
@@ -756,7 +763,8 @@ my $file=shift;
 			}
 		}
 
-
+        # Inherits are parsed here, independently and not changing the
+        # parser state.
 		if ($line=~ m/^\s*our +\@ISA +([^\; ]+)[\;](.*)/){
 			$self->{'INHERITS_FROM'} = $self->{'INHERITS_FROM'} || [];
 			my $name=$1;
