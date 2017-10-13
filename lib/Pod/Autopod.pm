@@ -665,6 +665,7 @@ my $file=shift;
         # $p is the number of the current line (0 based, of course)
 		my $p=scalar(@$arr)-1-$i;
 
+        # a line is written out by default
 		my $writeOut = 1;
 		
 		
@@ -719,7 +720,8 @@ my $file=shift;
 
 		# a hack for doxy gen, which rewrites the methodline
 		# doxy @return
-        # checking for '# @something' constructions in 'head' state
+        # checking for '# @something' constructions in 'head' state,
+        # such lines are not written out
 		if ($self->{'STATE'} eq 'head'){
 			if ($line=~ m/^\s*#\s*\@return\s+(.*)/){
 				my $retline = $1; # also containts description, which is not used at the moment
