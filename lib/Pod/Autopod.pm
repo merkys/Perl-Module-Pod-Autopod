@@ -646,19 +646,47 @@ my $file=shift;
         $subs = [] unless ref $subs;
         for my $sub (@$subs) {
             my $name = $sub->{'children'}[2]{'content'};
-            my $prev = $self->{'prev'}{refaddr $sub};
+            $self->_setMethodName($name);
+
+            my $content = $sub->{'children'}[-1]{'children'};
+            my $methodline = $content->[0];
+            while( defined $methodline &&
+                   $methodline->isa('PPI::Token::Whitespace') ) {
+                $methodline = $self->{'next'}{refaddr $methodline};
+            }
+            if( defined $methodline &&
+                $methodline->isa('PPI::Token::Comment') ) {
+                $self->_setMethodAttr( $name, 'methodlinerest',
+                                       $methodline->{'content'} );
+            } else {
+                $self->_setMethodAttr( $name, 'methodlinerest', '' );
+            }
+
+            $self->_clearHeadBuffer();
+            foreach( split "\n", "$sub" ) {
+                $self->_addLineToBodyBuffer( $_ );
+            }
+            $self->_addBodyBufferToAttr();
+
+            $self->_setMethodAttr($self->_getMethodName(),'returnline',$self->_getMethodReturn());
+            $self->_setMethodReturn(undef);
 
             # Collect and process head comments
+            my $prev = $self->{'prev'}{refaddr $sub};
             while( $prev->isa('PPI::Token::Whitespace') ||
                    $prev->isa('PPI::Token::Comment') ) {
                 if( $prev->isa('PPI::Token::Comment') ) {
                     # process the content of a comment line
+                    $self->_addLineToHeadBuffer( "$prev" );
                 }
                 $prev = $self->{'prev'}{refaddr $prev};
             }
+            $self->_addHeadBufferToAttr();
         }
 
     }
+
+    return;
 	
 	## reverse read
 	for (my $i=0;$i < scalar(@$arr); $i++){
