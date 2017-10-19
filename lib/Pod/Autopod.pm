@@ -765,88 +765,9 @@ my $file=shift;
 	for (my $i=0;$i < scalar(@$arr); $i++){
         # $p is the number of the current line (0 based, of course)
 		my $p=scalar(@$arr)-1-$i;
-
-        # a line is written out by default
-		my $writeOut = 1;
-		
-		
 		
 		# $line is currently analysed line.
 		my $line = $arr->[$p];
-
-		if ((($line=~ m/^\s*\#/) || ($p == 0)) && ($self->{'STATE'} eq 'headwait')){ ## last line of body
-            # head comments are detected
-			$self->{'STATE'} = 'head';
-		}elsif((($line=~ m/^\s*$/) || ($p == 0)) && ($self->{'STATE'} eq 'head')){ ## last line of body
-            # head is over, therefore, it is processed; parser waits for another body
-			$self->{'STATE'} = 'bodywait';
-
-			## collected doxy params? then rewrite methodline
-			if ((exists $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyparamline'}) && (scalar(@{ $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyparamline'} }) > 0)){
-
-				my $methodlinerest = $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'methodlinerest'};
-
-				if ($methodlinerest !~ /\{\s+.+/){ ## dont overwrite existing line
-					my @param;
-					foreach my $l (@{ $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyparamline'} }){
-						$l =~ m/^([^\s]+)/;
-						my $firstword = $1;
-						if ($firstword !~ m/^[\$\@\%]/){$firstword='$'.$firstword}; # scalar is fallback if nothing given
-						push @param, $firstword;
-					}
-					
-					my $retparam = $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyreturn'} || 'void';
-
-					my $newmethodlinerest = sprintf("{ # %s (%s)", $retparam, join(", ",@param));
-					$self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'methodlinerest'} = $newmethodlinerest;
-				}
-
-			}
-
-		}
-		
-
-        # If state is 'headwait' and a line is not empty and not containing a comment,
-        # 'free' state is picked.
-		if (($self->{'STATE'} eq 'headwait') && ($line!~ m/^\s*$/) && ($line!~ m/^\s*\#/)){
-			$self->{'STATE'}='free';
-		}
-
-        # If it's either first or the last line of sub, 'body' state is assumed.
-		if ((($line=~ m/^\s*\}/) || ($p == 0) || ($line=~ m/^\s*sub [^ ]+/)) && ($self->{'STATE'}=~ m/^(head|headwait|bodywait|free)$/)){ ## last line of body
-			$self->_clearBodyBuffer();
-			$self->{'STATE'} = 'body';
-			$self->_addHeadBufferToAttr();
-		}
-
-		# a hack for doxy gen, which rewrites the methodline
-		# doxy @return
-        # checking for '# @something' constructions in 'head' state,
-        # such lines are not written out
-		if ($self->{'STATE'} eq 'head'){
-            # REWRITTEN IN PPI
-		}
-
-        # sub is detected, state turns to 'headwait' (regardless of previous state).
-        # REWRITTEN IN PPI
-		if ($line=~ m/^\s*sub [^ ]+/){ ## head line
-			$self->_clearHeadBuffer();
-			$self->_setMethodLine($line);
-			$self->{'STATE'} = 'headwait';
-			$self->_addBodyBufferToAttr();
-			$self->_setMethodAttr($self->_getMethodName(),'returnline',$self->_getMethodReturn());
-			$self->_setMethodReturn(undef);	
-		}
-
-        # If writeOut is requested, line is added to an appropriate buffer.
-        # REWRITTEN IN PPI
-		if ($writeOut){
-			if ($self->{'STATE'} eq 'head'){
-				$self->_addLineToHeadBuffer($line);
-			}elsif($self->{'STATE'} eq 'body'){
-				$self->_addLineToBodyBuffer($line);	
-			}
-		}
 
         # Inherits are parsed here, independently and not changing the
         # parser state.
