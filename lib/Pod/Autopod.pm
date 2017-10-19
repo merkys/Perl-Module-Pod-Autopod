@@ -676,46 +676,43 @@ my $file=shift;
             $self->_addHeadBufferToAttr();
             $self->_clearHeadBuffer();
             my $prev = $self->{'prev'}{refaddr $sub};
-            while( $prev->isa('PPI::Token::Whitespace') ||
-                   $prev->isa('PPI::Token::Comment') ) {
-                if( $prev->isa('PPI::Token::Comment') ) {
-                    # process the content of a comment line
+            while( $prev->isa('PPI::Token::Comment') ) {
+                # process the content of a comment line
 
-                    my $line = "$prev";
-                    if ($line=~ m/^\s*#\s*\@return\s+(.*)/){
-                        my $retline = $1; # also containts description, which is not used at the moment
-                        $retline =~ m/([^\s]+)(.*)/;
-                        my $retval = $1;
-                        my $desc = $2 || $retval;
+                my $line = "$prev";
+                if ($line=~ m/^\s*#\s*\@return\s+(.*)/){
+                    my $retline = $1; # also containts description, which is not used at the moment
+                    $retline =~ m/([^\s]+)(.*)/;
+                    my $retval = $1;
+                    my $desc = $2 || $retval;
 
-                        if ($retval !~ m/^[\$\@\%]/){$retval='$'.$retval}; # scalar is fallback if nothing given
+                    if ($retval !~ m/^[\$\@\%]/){$retval='$'.$retval}; # scalar is fallback if nothing given
 
-                        if (exists $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'returnline'}){
-                            $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'methodlinerest'} =~ s/(\s*\#\s*)([^\s]+) /$1$retval/;	# remove/replace value behind "sub {" declaration
-                        }else{
-                            $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'methodlinerest'} = $retval;
-                        }
-
-                        $self->_addLineToHeadBuffer("");
-                        $self->_addLineToHeadBuffer("returns $desc");
-                        $self->_addLineToHeadBuffer("");
-
-                        $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyreturn'} = $retval;
-                    } elsif($line=~ m/^\s*#\s*\@(brief|method)\s+(.*)/){ ## removes the @brief word
-                        my $text = $2;
-                        $self->_addLineToHeadBuffer($text);
-                    } elsif($line=~ m/^\s*#\s*\@param\s+(.*)/){ ## creates a param text.
-                        my $text = $1;
-                        $self->_addLineToHeadBuffer("");
-                        $self->_addLineToHeadBuffer("parameter: $text");
-                        $self->_addLineToHeadBuffer("");
-
-                        $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyparamline'} ||= [];
-                        push @{ $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyparamline'} }, $text;
-                    } else {
-                        $line =~ s/^\s*#\s*//;
-                        $self->_addLineToHeadBuffer( $line );
+                    if (exists $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'returnline'}){
+                        $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'methodlinerest'} =~ s/(\s*\#\s*)([^\s]+) /$1$retval/;	# remove/replace value behind "sub {" declaration
+                    }else{
+                        $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'methodlinerest'} = $retval;
                     }
+
+                    $self->_addLineToHeadBuffer("");
+                    $self->_addLineToHeadBuffer("returns $desc");
+                    $self->_addLineToHeadBuffer("");
+
+                    $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyreturn'} = $retval;
+                } elsif($line=~ m/^\s*#\s*\@(brief|method)\s+(.*)/){ ## removes the @brief word
+                    my $text = $2;
+                    $self->_addLineToHeadBuffer($text);
+                } elsif($line=~ m/^\s*#\s*\@param\s+(.*)/){ ## creates a param text.
+                    my $text = $1;
+                    $self->_addLineToHeadBuffer("");
+                    $self->_addLineToHeadBuffer("parameter: $text");
+                    $self->_addLineToHeadBuffer("");
+
+                    $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyparamline'} ||= [];
+                    push @{ $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyparamline'} }, $text;
+                } else {
+                    $line =~ s/^\s*#\s*//;
+                    $self->_addLineToHeadBuffer( $line );
                 }
                 $prev = $self->{'prev'}{refaddr $prev};
             }
