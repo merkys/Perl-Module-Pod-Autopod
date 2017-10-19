@@ -688,17 +688,17 @@ my $file=shift;
 
                     if ($retval !~ m/^[\$\@\%]/){$retval='$'.$retval}; # scalar is fallback if nothing given
 
-                    if (exists $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'returnline'}){
-                        $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'methodlinerest'} =~ s/(\s*\#\s*)([^\s]+) /$1$retval/;	# remove/replace value behind "sub {" declaration
+                    if (exists $self->{'METHOD_ATTR'}->{$name}->{'returnline'}){
+                        $self->{'METHOD_ATTR'}->{$name}->{'methodlinerest'} =~ s/(\s*\#\s*)([^\s]+) /$1$retval/;	# remove/replace value behind "sub {" declaration
                     }else{
-                        $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'methodlinerest'} = $retval;
+                        $self->{'METHOD_ATTR'}->{$name}->{'methodlinerest'} = $retval;
                     }
 
                     $self->_addLineToHeadBuffer("");
                     $self->_addLineToHeadBuffer("returns $desc");
                     $self->_addLineToHeadBuffer("");
 
-                    $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyreturn'} = $retval;
+                    $self->{'METHOD_ATTR'}->{$name}->{'doxyreturn'} = $retval;
                 } elsif($line=~ m/^\s*#\s*\@(brief|method)\s+(.*)/){ ## removes the @brief word
                     my $text = $2;
                     $self->_addLineToHeadBuffer($text);
@@ -708,8 +708,8 @@ my $file=shift;
                     $self->_addLineToHeadBuffer("parameter: $text");
                     $self->_addLineToHeadBuffer("");
 
-                    $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyparamline'} ||= [];
-                    push @{ $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyparamline'} }, $text;
+                    $self->{'METHOD_ATTR'}->{$name}->{'doxyparamline'} ||= [];
+                    push @{ $self->{'METHOD_ATTR'}->{$name}->{'doxyparamline'} }, $text;
                 } else {
                     $line =~ s/^\s*#\s*//;
                     $self->_addLineToHeadBuffer( $line );
@@ -718,23 +718,23 @@ my $file=shift;
             }
             $self->_addHeadBufferToAttr();
 
-			if ((exists $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyparamline'}) && (scalar(@{ $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyparamline'} }) > 0)){
+			if ((exists $self->{'METHOD_ATTR'}->{$name}->{'doxyparamline'}) && (scalar(@{ $self->{'METHOD_ATTR'}->{$name}->{'doxyparamline'} }) > 0)){
 
-				my $methodlinerest = $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'methodlinerest'};
+				my $methodlinerest = $self->{'METHOD_ATTR'}->{$name}->{'methodlinerest'};
 
 				if ($methodlinerest !~ /\{\s+.+/){ ## dont overwrite existing line
 					my @param;
-					foreach my $l (@{ $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyparamline'} }){
+					foreach my $l (@{ $self->{'METHOD_ATTR'}->{$name}->{'doxyparamline'} }){
 						$l =~ m/^([^\s]+)/;
 						my $firstword = $1;
 						if ($firstword !~ m/^[\$\@\%]/){$firstword='$'.$firstword}; # scalar is fallback if nothing given
 						push @param, $firstword;
 					}
 
-					my $retparam = $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyreturn'} || 'void';
+					my $retparam = $self->{'METHOD_ATTR'}->{$name}->{'doxyreturn'} || 'void';
 
 					my $newmethodlinerest = sprintf("{ # %s (%s)", $retparam, join(", ",@param));
-					$self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'methodlinerest'} = $newmethodlinerest;
+					$self->{'METHOD_ATTR'}->{$name}->{'methodlinerest'} = $newmethodlinerest;
 				}
 
 			}
