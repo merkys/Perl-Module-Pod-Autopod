@@ -677,7 +677,9 @@ my $file=shift;
                    $prev->isa('PPI::Token::Comment') ) {
                 if( $prev->isa('PPI::Token::Comment') ) {
                     # process the content of a comment line
-                    $self->_addLineToHeadBuffer( "$prev" );
+                    if( "$prev" !~ /^\s*#\s*\@(return|brief|method|param)\s+/ ) {
+                        $self->_addLineToHeadBuffer( "$prev" );
+                    }
                 }
                 $prev = $self->{'prev'}{refaddr $prev};
             }
