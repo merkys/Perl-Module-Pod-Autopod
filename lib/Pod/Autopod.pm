@@ -663,6 +663,7 @@ my $file=shift;
             }
 
             # Put all body lines to body buffer
+            $self->_clearBodyBuffer();
             foreach( split "\n", "$sub" ) {
                 $self->_addLineToBodyBuffer( $_ );
             }
@@ -672,6 +673,7 @@ my $file=shift;
             $self->_setMethodReturn(undef);
 
             # Collect and process head comments
+            $self->_addHeadBufferToAttr();
             $self->_clearHeadBuffer();
             my $prev = $self->{'prev'}{refaddr $sub};
             while( $prev->isa('PPI::Token::Whitespace') ||
@@ -711,14 +713,43 @@ my $file=shift;
                         $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyparamline'} ||= [];
                         push @{ $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyparamline'} }, $text;
                     } else {
+                        $line =~ s/^\s*#\s*//;
                         $self->_addLineToHeadBuffer( $line );
                     }
                 }
                 $prev = $self->{'prev'}{refaddr $prev};
             }
             $self->_addHeadBufferToAttr();
+
+			if ((exists $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyparamline'}) && (scalar(@{ $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyparamline'} }) > 0)){
+
+				my $methodlinerest = $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'methodlinerest'};
+
+				if ($methodlinerest !~ /\{\s+.+/){ ## dont overwrite existing line
+					my @param;
+					foreach my $l (@{ $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyparamline'} }){
+						$l =~ m/^([^\s]+)/;
+						my $firstword = $1;
+						if ($firstword !~ m/^[\$\@\%]/){$firstword='$'.$firstword}; # scalar is fallback if nothing given
+						push @param, $firstword;
+					}
+
+					my $retparam = $self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'doxyreturn'} || 'void';
+
+					my $newmethodlinerest = sprintf("{ # %s (%s)", $retparam, join(", ",@param));
+					$self->{'METHOD_ATTR'}->{ $self->_getMethodName() }->{'methodlinerest'} = $newmethodlinerest;
+				}
+
+			}
         }
 
+        if( !exists $self->{'PKGNAME'} ) {
+            my $filet = $file;
+            $filet =~ s/\.pm//g;
+            $filet =~ s|/|::|g;
+			$self->{'PKGNAME'} = $filet;
+            $self->{'PKGNAME_DESC'} = $filet;
+        }
     }
 
     return;
@@ -832,15 +863,6 @@ my $file=shift;
 		$self->{'ISCLASS'}=1;
 	}
 		
-		
-	if (!exists $self->{'PKGNAME'}){
-      my $filet=$file;
-      $filet =~ s/\.pm//g;
-      $filet =~ s|/|::|g;
-			$self->{'PKGNAME'}=$filet;
-      $self->{'PKGNAME_DESC'}=$filet;
-  }
-
 	#	print Dumper($self->{'METHOD_ATTR'});
 	$self->_analyseAttributes();
 
