@@ -722,7 +722,7 @@ my $file=shift;
 
 				my $methodlinerest = $self->{'METHOD_ATTR'}->{$name}->{'methodlinerest'};
 
-				if ($methodlinerest !~ /\{\s+.+/){ ## dont overwrite existing line
+				if( !$methodlinerest ){ ## don't overwrite existing line
 					my @param;
 					foreach my $l (@{ $self->{'METHOD_ATTR'}->{$name}->{'doxyparamline'} }){
 						$l =~ m/^([^\s]+)/;
