@@ -750,6 +750,13 @@ my $file=shift;
 			$self->{'PKGNAME'} = $filet;
             $self->{'PKGNAME_DESC'} = $filet;
         }
+
+        if ((exists $self->{'METHOD_ATTR'}->{'new'}) || (scalar($self->{'INHERITS_FROM'}) >= 1 )){ ## its a class!
+            $self->{'ISCLASS'}=1;
+        }
+
+        $self->_analyseAttributes();
+        $self->_scanDescription($arr);
     }
 
     return;
@@ -854,25 +861,7 @@ my $file=shift;
 				push @{$self->{'INHERITS_FROM'}},{'name'=>$n} if $n;	
 			}
 		}
-		
-		#print $line.'   -   '.$self->{'STATE'};
 	}
-	
-	
-	if ((exists $self->{'METHOD_ATTR'}->{'new'}) || (scalar($self->{'INHERITS_FROM'}) >= 1 )){ ## its a class!
-		$self->{'ISCLASS'}=1;
-	}
-		
-	#	print Dumper($self->{'METHOD_ATTR'});
-	$self->_analyseAttributes();
-
-
-	$self->_scanDescription($arr);
-
-
-	#print Dumper($self->{'METHOD_ATTR'});
-
-	
 }
 
 
