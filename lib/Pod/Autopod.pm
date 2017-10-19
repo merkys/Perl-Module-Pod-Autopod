@@ -1081,7 +1081,7 @@ my $mat=$v->{'attributes'};
 
 
 	my $mrest = $mat->{'methodlinerest'};
-	$mrest=~ s/^[^\#]+\#*//;
+	$mrest=~ s/^\#*//;
 	$mat->{'methodlinecomment'}=$mrest;
 
 	my ($re,$at) = split(/\(/,$mrest,2);
