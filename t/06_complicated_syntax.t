@@ -41,11 +41,11 @@ t::06_complicated_syntax.t - t::06_complicated_syntax.t
 
 =head1 REQUIRES
 
-L<Pod::Autopod> 
+L<lib> 
 
 L<Test> 
 
-L<lib> 
+L<Pod::Autopod> 
 
 
 =head1 METHODS
