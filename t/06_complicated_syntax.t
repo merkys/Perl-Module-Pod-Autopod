@@ -41,11 +41,11 @@ t::06_complicated_syntax.t - t::06_complicated_syntax.t
 
 =head1 REQUIRES
 
-L<Pod::Autopod> 
+L<lib> 
 
 L<Test> 
 
-L<lib> 
+L<Pod::Autopod> 
 
 
 =head1 METHODS
@@ -59,7 +59,7 @@ This is a child sub
 
 =head2 parent_sub
 
- parent_sub();
+ my $output = parent_sub($param);
 
 This is a parent sub
 with description on the other line
